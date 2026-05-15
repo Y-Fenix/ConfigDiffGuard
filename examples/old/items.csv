@@ -1,0 +1,4 @@
+id,name,reward,difficulty
+1,coin_small,10,1
+2,coin_big,100,4
+3,hint,1,2

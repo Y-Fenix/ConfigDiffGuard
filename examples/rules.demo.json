@@ -1,0 +1,18 @@
+{
+  "include": ["*.csv", "**/*.csv"],
+  "tables": [
+    {
+      "pattern": "items.csv",
+      "primary_key": ["id"],
+      "important_fields": {
+        "reward": "high",
+        "difficulty": "high"
+      },
+      "field_rules": [
+        {"field": "id", "required": true, "severity": "critical"},
+        {"field": "difficulty", "min": 1, "max": 10, "severity": "high"}
+      ],
+      "removed_row_severity": "high"
+    }
+  ]
+}

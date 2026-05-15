@@ -1,0 +1,70 @@
+{
+  "include": [
+    "*.csv",
+    "*.tsv",
+    "*.json",
+    "**/*.csv",
+    "**/*.tsv",
+    "**/*.json"
+  ],
+  "exclude": [
+    "**/.git/**",
+    "**/Library/**",
+    "**/Temp/**",
+    "**/Logs/**",
+    "**/Build/**",
+    "**/Builds/**",
+    "**/obj/**",
+    "**/bin/**",
+    "**/node_modules/**",
+    "**/Packages/**",
+    "**/ProjectSettings/**",
+    "**/UserSettings/**",
+    "**/Plugins/**",
+    "**/*.meta"
+  ],
+  "max_details_per_table": 500,
+  "max_total_details": 20000,
+  "tables": [
+    {
+      "pattern": "**/*",
+      "primary_key": [],
+      "important_fields": {
+        "id": "critical",
+        "ID": "critical",
+        "Id": "critical",
+        "uid": "critical",
+        "UID": "critical",
+        "uuid": "critical",
+        "UUID": "critical",
+        "guid": "critical",
+        "GUID": "critical",
+        "key": "critical",
+        "Key": "critical",
+        "code": "critical",
+        "Code": "critical",
+        "name": "high",
+        "Name": "high",
+        "level_id": "high",
+        "levelId": "high",
+        "level": "high",
+        "Level": "high",
+        "stage": "high",
+        "Stage": "high",
+        "chapter": "high",
+        "Chapter": "high",
+        "difficulty": "high",
+        "reward": "high",
+        "price": "high",
+        "count": "high",
+        "weight": "high",
+        "probability": "high",
+        "enabled": "medium"
+      },
+      "field_rules": [],
+      "references": [],
+      "added_row_severity": "low",
+      "removed_row_severity": "high"
+    }
+  ]
+}

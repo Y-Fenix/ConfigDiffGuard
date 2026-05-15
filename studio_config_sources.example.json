@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "description": "Example config source rules for different studios or organizations. Copy this file to studio_config_sources.json and customize it for your private projects.",
+  "default_studio": "StudioA",
+  "studios": [
+    {
+      "name": "StudioA",
+      "org_id": "your_organization_id",
+      "namespace_id": "your_namespace_id",
+      "config_sources": [
+        {
+          "name": "LevelData CSV and JSON",
+          "formats": ["csv", "json"],
+          "include": [
+            "LevelData/**/*.csv",
+            "LevelData/**/*.json",
+            "Assets/Resources/LevelData/**/*.csv",
+            "Assets/Resources/LevelData/**/*.json",
+            "*/LevelData/**/*.csv",
+            "*/LevelData/**/*.json"
+          ],
+          "exclude": [
+            "**/.git/**",
+            "**/Library/**",
+            "**/Temp/**",
+            "**/Logs/**",
+            "**/Build/**",
+            "**/obj/**"
+          ],
+          "normalize_from": ["LevelData"]
+        }
+      ],
+      "project_overrides": {
+        "ExampleProject": {
+          "formats": ["json"],
+          "include": [
+            "ExampleProject/Assets/Resources/Config/**/*.json"
+          ],
+          "normalize_from": ["Config"]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+[project]
+name = "config-diff-guard"
+version = "0.1.0"
+description = "Semantic diff and risk report for large game configuration changes."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+xlsx = ["openpyxl>=3.1.0"]
+yaml = ["PyYAML>=6.0.0"]
+
+[project.scripts]
+config-diff-guard = "config_diff_guard.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

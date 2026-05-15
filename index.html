@@ -1,0 +1,1734 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ConfigDiffGuard 配置对比</title>
+  <style>
+    :root {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #f5f7fa;
+    }
+    body { margin: 0; background: #f5f7fa; }
+    header {
+      background: #162033;
+      color: #fff;
+      padding: 22px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    h1 { margin: 0; font-size: 24px; letter-spacing: 0; }
+    main { padding: 22px 30px 34px; }
+    button, select, input {
+      border: 1px solid #c7d0dd;
+      border-radius: 6px;
+      background: #fff;
+      color: #172033;
+      padding: 9px 12px;
+      font-size: 14px;
+    }
+    button {
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.primary {
+      background: #1769e0;
+      border-color: #1769e0;
+      color: #fff;
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid #dce3ec;
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 86px;
+    }
+    .label {
+      display: block;
+      color: #5b677a;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .path {
+      display: block;
+      color: #172033;
+      font-size: 13px;
+      margin-top: 8px;
+      word-break: break-all;
+    }
+    .selected-source {
+      color: #b42318;
+      font-weight: 700;
+    }
+    .selected-source.is-selected {
+      color: #138a3d;
+    }
+    .selected-rules {
+      color: #1769e0;
+      font-weight: 700;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 12px 0 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .metric {
+      background: #fff;
+      border: 1px solid #dce3ec;
+      border-radius: 8px;
+      padding: 13px;
+      color: #5b677a;
+      font-size: 13px;
+    }
+    .metric strong {
+      color: #172033;
+      display: block;
+      font-size: 24px;
+      margin-top: 4px;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .filters input { min-width: 260px; }
+    .status {
+      color: #5b677a;
+      font-size: 13px;
+      font-weight: 700;
+      margin: 10px 0;
+    }
+    .elapsed {
+      color: #172033;
+      font-size: 13px;
+      font-weight: 700;
+      margin: 10px 0 2px;
+      min-height: 18px;
+    }
+    .status.status-ready {
+      color: #138a3d;
+    }
+    .status.status-blocked {
+      color: #b42318;
+    }
+    .choice-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    button.secondary {
+      background: #f8fafc;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 18, 31, .46);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal.hidden { display: none; }
+    .modal-card {
+      width: min(980px, 96vw);
+      max-height: 86vh;
+      overflow: hidden;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #dce3ec;
+      box-shadow: 0 18px 60px rgba(15, 23, 42, .24);
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid #e7ebf1;
+    }
+    .modal-head h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    .modal-body {
+      padding: 16px 18px;
+      overflow: auto;
+    }
+    .ref-search {
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 14px;
+    }
+    .picker-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .project-picker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .project-picker label {
+      color: #5b677a;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .project-picker select {
+      min-width: 260px;
+    }
+    .cloud-note {
+      color: #5b677a;
+      font-size: 12px;
+      margin: -4px 0 12px;
+    }
+    .ref-section {
+      margin: 14px 0 18px;
+    }
+    .ref-section h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: #5b677a;
+      letter-spacing: 0;
+    }
+    .ref-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 8px;
+    }
+    .ref-item {
+      text-align: left;
+      border: 1px solid #dce3ec;
+      background: #fff;
+      border-radius: 6px;
+      padding: 9px 10px;
+      min-height: 42px;
+    }
+    .ref-item strong,
+    .ref-item span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ref-item span {
+      color: #5b677a;
+      font-weight: 400;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: visible;
+      border: 1px solid #dce3ec;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      min-width: 1280px;
+      table-layout: fixed;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    th, td {
+      border-bottom: 1px solid #e7ebf1;
+      border-right: 1px solid #edf1f6;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 13px;
+      white-space: normal;
+    }
+    th:last-child,
+    td:last-child {
+      border-right: 0;
+    }
+    th {
+      background: #eef3f8;
+    }
+    .col-old,
+    .col-new,
+    .col-reason {
+      border-left: 1px solid #d7e0eb;
+    }
+    .floating-head {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 50;
+      display: none;
+      overflow: hidden;
+      border: 1px solid #dce3ec;
+      border-bottom: 1px solid #cfd8e3;
+      background: #fff;
+      box-shadow: 0 6px 18px rgba(18, 26, 39, 0.12);
+      pointer-events: none;
+    }
+    .floating-head.visible {
+      display: block;
+    }
+    .floating-head table {
+      margin: 0;
+      will-change: transform;
+    }
+    .floating-head th {
+      box-sizing: border-box;
+    }
+    code { white-space: normal; word-break: break-word; }
+    td code { white-space: normal; word-break: break-word; }
+    .value-cell {
+      display: block;
+      min-height: 20px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .diff-added {
+      color: #138a3d;
+      font-weight: 700;
+    }
+    .diff-removed {
+      color: #b42318;
+      font-weight: 700;
+    }
+    .blank-added,
+    .blank-removed {
+      display: block;
+      min-height: 24px;
+      border-radius: 3px;
+    }
+    .blank-added {
+      background: rgba(19, 138, 61, .18);
+    }
+    .blank-removed {
+      background: rgba(180, 35, 24, .18);
+    }
+    .col-risk { width: 48px; min-width: 48px; }
+    .col-type { width: 72px; min-width: 72px; }
+    .col-table { width: 250px; min-width: 250px; max-width: 250px; }
+    .col-key { width: 100px; min-width: 100px; max-width: 100px; }
+    .col-field { width: 110px; min-width: 110px; max-width: 110px; }
+    .col-old, .col-new { width: 360px; min-width: 220px; max-width: 360px; }
+    .col-reason { width: 120px; min-width: 120px; max-width: 120px; }
+    .sev-critical { color: #9f1239; font-weight: 700; }
+    .sev-high { color: #b42318; font-weight: 700; }
+    .sev-medium { color: #946200; font-weight: 700; }
+    .sev-low { color: #1d4ed8; font-weight: 700; }
+    .sev-info { color: #5b677a; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ConfigDiffGuard 配置对比</h1>
+    <button id="loadDemo">载入示例</button>
+  </header>
+  <main>
+    <section class="toolbar">
+      <div class="panel">
+        <span class="label">旧配置目录</span>
+        <div class="choice-row">
+          <button id="pickOld">【旧】本地目录</button>
+          <button class="secondary" id="pickOldGit">【旧】远程目录</button>
+        </div>
+        <span class="path selected-source" id="oldPath">未选择</span>
+      </div>
+      <div class="panel">
+        <span class="label">新配置目录</span>
+        <div class="choice-row">
+          <button id="pickNew">【新】本地目录</button>
+          <button class="secondary" id="pickNewGit">【新】远程目录</button>
+        </div>
+        <span class="path selected-source" id="newPath">未选择</span>
+      </div>
+      <div class="panel">
+        <span class="label">规则文件</span>
+        <button id="pickRules">选择 rules.json</button>
+        <span class="path selected-rules" id="rulesPath">未选择时使用默认规则</span>
+      </div>
+    </section>
+
+    <input class="hidden" id="oldInput" type="file" webkitdirectory multiple />
+    <input class="hidden" id="newInput" type="file" webkitdirectory multiple />
+    <input class="hidden" id="rulesInput" type="file" accept=".json" />
+
+    <section class="modal hidden" id="gitModal" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h2 id="gitModalTitle">选择 Git 版本</h2>
+          <button id="closeGitModal">关闭</button>
+        </div>
+        <div class="modal-body">
+          <div class="picker-row">
+            <div class="project-picker">
+              <label for="gitOrgSelect">工作室</label>
+              <select id="gitOrgSelect"></select>
+            </div>
+            <div class="project-picker">
+              <label for="gitProjectSelect">项目</label>
+              <select id="gitProjectSelect"></select>
+            </div>
+          </div>
+          <div class="cloud-note" id="gitProjectNote"></div>
+          <input class="ref-search" id="gitSearch" placeholder="搜索分支、tag、commit、提交说明" />
+          <div class="status" id="gitStatus">正在读取 Git 版本...</div>
+          <div id="gitRefs"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="actions">
+      <button class="primary" id="compare" disabled>开始对比</button>
+      <button id="downloadCsv" disabled>导出 CSV</button>
+      <button id="downloadJson" disabled>导出 JSON</button>
+      <button id="clear">清空</button>
+    </section>
+
+    <div class="elapsed" id="elapsedStatus">&nbsp;</div>
+    <div class="status" id="status">请选择【旧】本地目录/【新】本地目录，或选择【旧】远程目录/【新】远程目录。浏览器会在本地读取文件，不上传数据。</div>
+    <section class="grid" id="metrics"></section>
+
+    <section class="filters">
+      <input id="query" placeholder="筛选配置、标识、字段/属性、原因" />
+      <select id="severity">
+        <option value="">全部风险</option>
+        <option value="critical">严重</option>
+        <option value="high">高</option>
+        <option value="medium">中</option>
+        <option value="low">低</option>
+        <option value="info">提示</option>
+      </select>
+      <select id="type">
+        <option value="">全部类型</option>
+      </select>
+    </section>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-risk">风险</th>
+            <th class="col-type">类型</th>
+            <th class="col-table">配置</th>
+            <th class="col-key">标识</th>
+            <th class="col-field">字段/属性</th>
+            <th class="col-old">旧值</th>
+            <th class="col-new">新值</th>
+            <th class="col-reason">原因</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const DEFAULT_RULES = {
+      include: ["*.csv", "*.tsv", "*.json", "**/*.csv", "**/*.tsv", "**/*.json"],
+      exclude: [
+        "**/.git/**", "**/Library/**", "**/Temp/**", "**/Logs/**",
+        "**/Build/**", "**/Builds/**", "**/obj/**", "**/bin/**",
+        "**/node_modules/**", "**/Packages/**", "**/ProjectSettings/**", "**/UserSettings/**",
+        "**/Plugins/**", "**/Spine/**", "**/*.meta"
+      ],
+      tables: [],
+      max_total_details: 10000
+    };
+    const keyCandidates = [
+      "id", "ID", "Id", "uid", "UID", "uuid", "UUID", "guid", "GUID",
+      "key", "Key", "name", "Name", "code", "Code",
+      "level_id", "levelId", "level", "Level", "stage", "Stage", "chapter", "Chapter",
+      "序号", "编号", "配置ID", "关卡ID", "所属关卡ID", "DateId", "类型"
+    ];
+    const supported = new Set([".csv", ".tsv", ".json"]);
+    const severityLabels = {critical: "严重", high: "高", medium: "中", low: "低", info: "提示"};
+    const typeLabels = {
+      added_row: "新增记录",
+      removed_row: "删除记录",
+      modified_field: "修改字段/属性",
+      added_file: "新增文件",
+      removed_file: "删除文件",
+      schema_changed: "结构变化",
+      validation: "校验问题"
+    };
+    const reasonLabels = {
+      "New config file": "新增配置文件",
+      "Config file removed": "配置文件被删除",
+      "Column set changed": "字段/属性集合发生变化",
+      "Important field changed": "关键字段/属性变更",
+      "Required field is empty": "必填字段/属性为空",
+      "Value is below minimum": "数值低于最小值",
+      "Value is above maximum": "数值高于最大值",
+      "Value is outside enum": "枚举值不在允许范围内"
+    };
+    let oldFiles = [];
+    let newFiles = [];
+    let oldGitRef = "";
+    let newGitRef = "";
+    let oldGitProject = "";
+    let newGitProject = "";
+    let oldGitOrg = "";
+    let newGitOrg = "";
+    let oldGitSource = "";
+    let newGitSource = "";
+    let selectedGitOrg = "";
+    let selectedGitProject = "";
+    let gitPickTarget = "";
+    let projectsCache = null;
+    let cloudProjectsLoading = false;
+    let cloudProjectsLoadingOrg = "";
+    const cloudLoadedOrgs = new Set();
+    const cloudProjectsByOrg = {};
+    let refsCache = null;
+    const refsCacheByProject = {};
+    let rules = DEFAULT_RULES;
+    let result = null;
+    let floatingHeader = null;
+    let floatingHeaderFrame = 0;
+    let floatingHeaderSignature = "";
+    let operationTimer = 0;
+    let operationStartedAt = 0;
+    let operationMode = "";
+
+    const $ = (id) => document.getElementById(id);
+    $("pickOld").onclick = () => pickAgain("oldInput");
+    $("pickNew").onclick = () => pickAgain("newInput");
+    $("pickOldGit").onclick = () => openGitPicker("old");
+    $("pickNewGit").onclick = () => openGitPicker("new");
+    $("pickRules").onclick = () => pickAgain("rulesInput");
+    $("closeGitModal").onclick = closeGitPicker;
+    $("gitOrgSelect").addEventListener("change", () => {
+      selectedGitOrg = $("gitOrgSelect").value;
+      cloudProjectsLoading = false;
+      cloudProjectsLoadingOrg = "";
+      projectsCache.cloud_error = "";
+      projectsCache.projects = (projectsCache.local_projects || []).map(project => ({...project}));
+      selectedGitProject = "";
+      refsCache = null;
+      clearGitRefs("请选择当前工作室下的项目。");
+      $("gitSearch").value = "";
+      renderOrgSelect();
+      renderProjectSelect();
+      ensureSelectedProjectInCurrentOrg();
+      loadCloudProjects();
+      loadGitRefs().catch(error => {
+        $("gitStatus").textContent = `读取 Git 版本失败：${error.message}`;
+      });
+    });
+    $("gitProjectSelect").addEventListener("change", () => {
+      selectedGitProject = $("gitProjectSelect").value;
+      refsCache = null;
+      clearGitRefs("正在切换项目...");
+      $("gitSearch").value = "";
+      loadGitRefs().catch(error => {
+        $("gitStatus").textContent = `读取 Git 版本失败：${error.message}`;
+      });
+    });
+    $("gitSearch").addEventListener("input", renderGitRefs);
+    $("clear").onclick = () => location.reload();
+    $("loadDemo").onclick = loadDemo;
+    $("compare").onclick = compare;
+    $("downloadCsv").onclick = () => download("config-diff.csv", toCsv(result.changes), "text/csv;charset=utf-8");
+    $("downloadJson").onclick = () => download("config-diff.json", JSON.stringify(result, null, 2), "application/json;charset=utf-8");
+    ["query", "severity", "type"].forEach(id => $(id).addEventListener("input", renderRows));
+    setupFloatingHeader();
+
+    $("oldInput").addEventListener("change", (event) => {
+      oldFiles = normalizeFiles([...event.target.files]);
+      oldGitRef = "";
+      oldGitProject = "";
+      oldGitOrg = "";
+      oldGitSource = "";
+      $("oldPath").textContent = `${oldFiles.length} 个文件`;
+      $("oldPath").classList.toggle("is-selected", oldFiles.length > 0);
+      updateReady();
+    });
+    $("newInput").addEventListener("change", (event) => {
+      newFiles = normalizeFiles([...event.target.files]);
+      newGitRef = "";
+      newGitProject = "";
+      newGitOrg = "";
+      newGitSource = "";
+      $("newPath").textContent = `${newFiles.length} 个文件`;
+      $("newPath").classList.toggle("is-selected", newFiles.length > 0);
+      updateReady();
+    });
+    $("rulesInput").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        rules = normalizeRules(JSON.parse(await file.text()));
+        $("rulesPath").textContent = file.name;
+        setStatus("规则文件已加载。");
+      } catch (error) {
+        setStatus(`规则文件解析失败：${error.message}`, "blocked");
+      }
+    });
+
+    function updateReady() {
+      const hasDirs = oldFiles.length && newFiles.length && !oldGitRef && !newGitRef;
+      const sameGitProject = oldGitProject && oldGitProject === newGitProject && oldGitOrg === newGitOrg && oldGitSource === newGitSource;
+      const hasGit = oldGitRef && newGitRef && sameGitProject && !oldFiles.length && !newFiles.length;
+      $("compare").disabled = !(hasDirs || hasGit);
+      if (hasGit) {
+        const sourceLabel = oldGitSource === "cloud" ? "Codeup" : "本机 Git";
+        setStatus(`可以开始 ${sourceLabel} 版本对比：${oldGitProject} / ${oldGitRef} -> ${newGitRef}`, "ready");
+      } else if (oldGitProject && newGitProject && !sameGitProject) {
+        setStatus(`旧分支和新分支必须来自同一个项目和工作室。当前：${oldGitProject} / ${newGitProject}，请改成同一个项目。`, "blocked");
+      } else if (hasDirs) {
+        setStatus("可以开始目录对比。", "ready");
+      } else if (oldGitRef || newGitRef) {
+        setStatus("请选择【旧】远程目录和【新】远程目录。", "blocked");
+      } else {
+        setStatus("请选择【旧】本地目录和【新】本地目录，或选择两个远程版本。", "blocked");
+      }
+    }
+
+    function pickAgain(inputId) {
+      const input = $(inputId);
+      input.value = "";
+      input.click();
+    }
+
+    function normalizeFiles(files) {
+      const supportedFiles = files
+        .map(file => ({ file, path: normalizePath(file.webkitRelativePath || file.name) }))
+        .filter(item => supported.has(ext(item.path)));
+      const matched = supportedFiles.filter(item => included(item.path, rules));
+      if (matched.length || !supportedFiles.length) {
+        return matched;
+      }
+      setStatus("已读取目录，但当前 rules.json 没匹配到这些路径；已用默认文件路径继续。建议选择项目根目录或 LevelData 目录。");
+      return supportedFiles;
+    }
+
+    function normalizePath(path) {
+      const parts = path.split("/").filter(Boolean);
+      const levelDataIndex = parts.indexOf("LevelData");
+      if (levelDataIndex >= 0) {
+        return parts.slice(levelDataIndex).join("/");
+      }
+      return parts.length > 1 ? parts.slice(1).join("/") : path;
+    }
+
+    async function compare() {
+      clearComparisonResult();
+      if (oldGitRef && newGitRef) {
+        if (!oldGitProject || oldGitProject !== newGitProject || oldGitOrg !== newGitOrg || oldGitSource !== newGitSource) {
+          setStatus(`旧分支和新分支必须来自同一个项目。当前：${oldGitProject || "未选择"} / ${newGitProject || "未选择"}`, "blocked");
+          return;
+        }
+        await compareGit();
+        return;
+      }
+      await compareLocal();
+    }
+
+    async function compareGit() {
+      $("compare").disabled = true;
+      const sourceLabel = oldGitSource === "cloud" ? "Codeup" : "本机 Git";
+      beginOperationTimer("query");
+      setStatus(`正在对比 ${sourceLabel} 版本：${oldGitProject} / ${oldGitRef} -> ${newGitRef} ...`);
+      try {
+        const response = await fetch("/api/git-compare", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({project: oldGitProject, org: oldGitOrg, source: oldGitSource, old_ref: oldGitRef, new_ref: newGitRef})
+        });
+        const payload = await response.json();
+        if (!response.ok || payload.error) {
+          throw new Error(payload.error || `HTTP ${response.status}`);
+        }
+        result = payload;
+        $("downloadCsv").disabled = false;
+        $("downloadJson").disabled = false;
+        fillTypeFilter();
+        renderMetrics();
+        renderRows();
+        finishOperationTimer("花费耗时");
+        if (isNoComparableResult(result)) {
+          $("downloadCsv").disabled = true;
+          $("downloadJson").disabled = true;
+          setStatus(`${sourceLabel} 对比完成：${oldGitProject} 没有可对比的 csv 或 json。`, "blocked");
+          return;
+        }
+        setStatus(`${sourceLabel} 对比完成：${result.old} -> ${result.new}，已生成 ${result.changes.length}/${result.total_changes || result.changes.length} 条风险优先明细，页面展示前 ${Math.min(result.changes.length, 2000)} 条，导出为完整结果。`, "ready");
+      } catch (error) {
+        finishOperationTimer("花费耗时");
+        setStatus(`Git 对比失败：${error.message}。请确认通过“打开配置对比工具.command”启动，而不是直接打开 index.html。`, "blocked");
+      } finally {
+        $("compare").disabled = false;
+      }
+    }
+
+    async function compareLocal() {
+      $("compare").disabled = true;
+      beginOperationTimer("query");
+      setStatus("正在读取和对比配置...");
+      try {
+        await new Promise(resolve => setTimeout(resolve, 20));
+        const oldTables = await parseFiles(oldFiles);
+        const newTables = await parseFiles(newFiles);
+        const changes = [];
+        const tableSummaries = {};
+        const stats = {
+          old_tables: Object.keys(oldTables).length,
+          new_tables: Object.keys(newTables).length,
+          added_tables: 0,
+          removed_tables: 0,
+          changed_tables: 0,
+          added_rows: 0,
+          removed_rows: 0,
+          modified_fields: 0,
+          validation_issues: 0,
+          parse_errors: 0
+        };
+        const tables = [...new Set([...Object.keys(oldTables), ...Object.keys(newTables)])].sort();
+        for (const table of tables) {
+          const oldTable = oldTables[table];
+          const newTable = newTables[table];
+          if (!oldTable) {
+            stats.added_tables++;
+            addChange(changes, tableSummaries, {severity: "medium", type: "added_file", table, reason: "New config file"});
+            continue;
+          }
+          if (!newTable) {
+            stats.removed_tables++;
+            addChange(changes, tableSummaries, {severity: "high", type: "removed_file", table, reason: "Config file removed"});
+            continue;
+          }
+          const rule = tableRule(table);
+          const oldParseErrors = new Set(oldTable.errors);
+          for (const error of newTable.errors.filter(error => !oldParseErrors.has(error))) {
+            stats.parse_errors++;
+            addChange(changes, tableSummaries, {severity: "high", type: "validation", table, reason: error});
+          }
+          if (rule.primary_key?.length) {
+            const oldDuplicates = new Set(Object.entries(oldTable.duplicates).map(([key, count]) => `${key}\u0000${count}`));
+            for (const [key, count] of Object.entries(newTable.duplicates)) {
+              if (oldDuplicates.has(`${key}\u0000${count}`)) continue;
+              stats.validation_issues++;
+              addChange(changes, tableSummaries, {severity: "critical", type: "validation", table, key, reason: `Duplicate primary key appears ${count} times in new config`});
+            }
+          }
+          const oldKeys = new Set(Object.keys(oldTable.rows));
+          const newKeys = new Set(Object.keys(newTable.rows));
+          for (const key of [...newKeys].filter(key => !oldKeys.has(key)).sort()) {
+            stats.added_rows++;
+            addChange(changes, tableSummaries, {severity: rule.added_row_severity || "low", type: "added_row", table, key, new: newTable.rows[key]});
+          }
+          for (const key of [...oldKeys].filter(key => !newKeys.has(key)).sort()) {
+            stats.removed_rows++;
+            addChange(changes, tableSummaries, {severity: rule.removed_row_severity || "medium", type: "removed_row", table, key, old: oldTable.rows[key]});
+          }
+          for (const key of [...oldKeys].filter(key => newKeys.has(key)).sort()) {
+            const oldRow = oldTable.rows[key];
+            const newRow = newTable.rows[key];
+            const fields = [...new Set([...Object.keys(oldRow), ...Object.keys(newRow)])].sort();
+            for (const field of fields) {
+              const oldValue = oldRow[field] ?? "";
+              const newValue = newRow[field] ?? "";
+              if (String(oldValue) === String(newValue)) continue;
+              stats.modified_fields++;
+              const severity = rule.important_fields?.[field] || "info";
+              addChange(changes, tableSummaries, {
+                severity, type: "modified_field", table, key, field, old: oldValue, new: newValue,
+                reason: rule.important_fields?.[field] ? "Important field changed" : ""
+              });
+            }
+          }
+          const oldValidation = new Set(validateRows(table, oldTable.rows, rule).map(validationSignature));
+          for (const issue of validateRows(table, newTable.rows, rule).filter(issue => !oldValidation.has(validationSignature(issue)))) {
+            stats.validation_issues++;
+            addChange(changes, tableSummaries, issue);
+          }
+        }
+        stats.changed_tables = Object.keys(tableSummaries).length;
+        result = {
+          old: "旧目录",
+          new: "新目录",
+          generated: new Date().toLocaleString(),
+          stats,
+          tables: tableSummaries,
+          changes: sortChanges(changes),
+          total_changes: changes.length
+        };
+        $("downloadCsv").disabled = false;
+        $("downloadJson").disabled = false;
+        fillTypeFilter();
+        renderMetrics();
+        renderRows();
+        finishOperationTimer("花费耗时");
+        if (isNoComparableResult(result)) {
+          $("downloadCsv").disabled = true;
+          $("downloadJson").disabled = true;
+          setStatus("目录对比完成：没有可对比的 csv 或 json。", "blocked");
+          return;
+        }
+        setStatus(`对比完成：已生成 ${result.changes.length} 条风险优先明细，页面展示前 ${Math.min(result.changes.length, 2000)} 条，导出为完整结果。`, "ready");
+      } catch (error) {
+        finishOperationTimer("花费耗时");
+        setStatus(`目录对比失败：${error.message}`, "blocked");
+      } finally {
+        $("compare").disabled = false;
+      }
+    }
+
+    async function openGitPicker(target) {
+      gitPickTarget = target;
+      $("gitModalTitle").textContent = target === "old" ? "选择【旧】远程目录" : "选择【新】远程目录";
+      $("gitModal").classList.remove("hidden");
+      $("gitModal").setAttribute("aria-hidden", "false");
+      $("gitSearch").value = "";
+      try {
+        await loadProjects();
+        const preferred = preferredGitPickerSelection(target);
+        selectedGitOrg = preferred.org;
+        selectedGitProject = preferred.project;
+        renderOrgSelect();
+        renderProjectSelect({preserveProject: preferred.project});
+        await loadCloudProjects({preserveProject: preferred.project, reloadRefs: false});
+        if (preferred.project && currentOrgProjects().some(project => project.name === preferred.project)) {
+          selectedGitProject = preferred.project;
+        }
+        renderProjectSelect();
+        ensureSelectedProjectInCurrentOrg();
+        await loadGitRefs();
+      } catch (error) {
+        $("gitStatus").textContent = `读取项目或 Git 版本失败：${error.message}。请通过“打开配置对比工具.command”启动工具。`;
+      }
+    }
+
+    function preferredGitPickerSelection(target) {
+      const oppositeOrg = target === "old" ? newGitOrg : oldGitOrg;
+      const oppositeProject = target === "old" ? newGitProject : oldGitProject;
+      const ownOrg = target === "old" ? oldGitOrg : newGitOrg;
+      const ownProject = target === "old" ? oldGitProject : newGitProject;
+      return {
+        org: oppositeOrg || ownOrg || selectedGitOrg || projectsCache.default_org || projectsCache.organizations?.[0]?.id || "",
+        project: oppositeProject || ownProject || selectedGitProject || projectsCache.default_project || projectsCache.projects?.[0]?.name || ""
+      };
+    }
+
+    async function loadProjects() {
+      if (projectsCache) return projectsCache;
+      $("gitStatus").textContent = "正在读取项目列表...";
+      $("gitRefs").innerHTML = "";
+      const response = await fetch("/api/projects");
+      const payload = await response.json();
+      if (!response.ok || payload.error) {
+        throw new Error(payload.error || `HTTP ${response.status}`);
+      }
+      projectsCache = payload;
+      projectsCache.local_projects = (payload.projects || []).map(project => ({...project}));
+      if (!projectsCache.projects?.length) {
+        throw new Error(`未在 ${projectsCache.root || "Unity 目录"} 下找到 Git 项目`);
+      }
+      selectedGitOrg = projectsCache.default_org || projectsCache.organizations?.[0]?.id || "";
+      selectedGitProject = projectsCache.default_project || projectsCache.projects[0].name;
+      return projectsCache;
+    }
+
+    function renderOrgSelect() {
+      const select = $("gitOrgSelect");
+      const organizations = projectsCache?.organizations || [];
+      select.innerHTML = organizations.map(org => `
+        <option value="${escapeHtml(org.id)}"${org.id === selectedGitOrg ? " selected" : ""}>${escapeHtml(org.name)}</option>
+      `).join("");
+      select.disabled = organizations.length <= 1;
+    }
+
+    function renderProjectSelect(options = {}) {
+      const select = $("gitProjectSelect");
+      const projects = currentOrgProjects();
+      const note = $("gitProjectNote");
+      select.innerHTML = projects.map(project => `
+        <option value="${escapeHtml(project.name)}"${project.name === selectedGitProject ? " selected" : ""}>
+          ${escapeHtml(project.display_name || project.name)}${project.current_branch ? `（${escapeHtml(project.current_branch)}）` : ""}${project.cloned ? "" : " - Codeup"}
+        </option>
+      `).join("");
+      if (!projects.some(project => project.name === selectedGitProject)) {
+        if (!(options.preserveProject && selectedGitProject === options.preserveProject)) {
+          selectedGitProject = projects[0]?.name || "";
+          select.value = selectedGitProject;
+        }
+      }
+      const localCount = projects.filter(project => project.cloned).length;
+      const cloudCount = projects.filter(project => !project.cloned).length;
+      const orgName = (projectsCache.organizations || []).find(org => org.id === selectedGitOrg)?.name || "当前工作室";
+      if (cloudProjectsLoading) {
+        note.textContent = `已先展示 ${localCount} 个本机项目，正在后台同步 ${orgName} 的 Codeup 权限项目...`;
+      } else if (projectsCache.cloud_enabled) {
+        note.textContent = cloudCount
+          ? `${orgName}：已展示 ${localCount} 个本机项目，另有 ${cloudCount} 个 Codeup 项目可直接云端对比，无需 clone。`
+          : `${orgName}：已接入 Codeup 权限项目；当前可对比 ${localCount} 个本机项目。`;
+      } else {
+        note.textContent = `当前展示 ${localCount} 个本机已克隆 Git 项目。要展示 Codeup 权限下全部项目，请在启动前配置 YUNXIAO_TOKEN。`;
+      }
+      if (projectsCache.cloud_error) {
+        note.textContent += ` Codeup 同步失败：${projectsCache.cloud_error}`;
+      }
+    }
+
+    function ensureSelectedProjectInCurrentOrg() {
+      const projects = currentOrgProjects();
+      if (!projects.some(project => project.name === selectedGitProject)) {
+        selectedGitProject = projects[0]?.name || "";
+      }
+    }
+
+    function currentOrgProjects() {
+      const projects = projectsCache?.projects || [];
+      const org = (projectsCache?.organizations || []).find(item => item.id === selectedGitOrg) || {};
+      const allowedSpaces = new Set([selectedGitOrg, org.name, org.namespace_id].filter(Boolean));
+      return projects.filter(project => {
+        if (!project.cloned) {
+          const space = codeupSpace(project.web_url || project.remote_url || "");
+          return project.org_id === selectedGitOrg || (project.namespace_id && org.namespace_id && project.namespace_id === org.namespace_id) || (space && allowedSpaces.has(space));
+        }
+        const space = codeupSpace(project.remote_url || "");
+        return !space || allowedSpaces.has(space);
+      });
+    }
+
+    function codeupSpace(url) {
+      const match = String(url || "").match(/codeup\.aliyun\.com\/([^/]+)/);
+      return match ? match[1] : "";
+    }
+
+    async function loadCloudProjects(options = {}) {
+      if (!projectsCache?.cloud_enabled || cloudProjectsLoading) return;
+      const loadingOrg = selectedGitOrg;
+      const preserveProject = options.preserveProject || selectedGitProject;
+      if (cloudLoadedOrgs.has(loadingOrg)) {
+        if (cloudProjectsByOrg[loadingOrg]) {
+          mergeCloudProjects(cloudProjectsByOrg[loadingOrg], loadingOrg);
+          if (preserveProject && currentOrgProjects().some(project => project.name === preserveProject)) {
+            selectedGitProject = preserveProject;
+          }
+          renderProjectSelect();
+          ensureSelectedProjectInCurrentOrg();
+          if (options.reloadRefs !== false) {
+            loadGitRefs().catch(error => {
+              $("gitStatus").textContent = `读取 Git 版本失败：${error.message}`;
+            });
+          }
+        }
+        return;
+      }
+      cloudProjectsLoading = true;
+      cloudProjectsLoadingOrg = loadingOrg;
+      let cloudLoaded = false;
+      renderProjectSelect({preserveProject});
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const response = await fetch(`/api/cloud-projects?org=${encodeURIComponent(loadingOrg || "")}`, {signal: controller.signal});
+        clearTimeout(timeout);
+        const payload = await response.json();
+        if (!response.ok || payload.error) {
+          throw new Error(payload.error || `HTTP ${response.status}`);
+        }
+        if (loadingOrg !== selectedGitOrg) return;
+        cloudProjectsByOrg[loadingOrg] = payload.projects || [];
+        cloudLoaded = true;
+        mergeCloudProjects(payload.projects || [], loadingOrg);
+        projectsCache.cloud_error = payload.cloud_error || "";
+      } catch (error) {
+        if (loadingOrg !== selectedGitOrg) return;
+        projectsCache.cloud_error = error.name === "AbortError" ? "Codeup 同步超时，已保留本机项目可用。" : error.message;
+      } finally {
+        if (cloudLoaded) {
+          cloudLoadedOrgs.add(loadingOrg);
+        }
+        cloudProjectsLoading = false;
+        cloudProjectsLoadingOrg = "";
+        if (loadingOrg !== selectedGitOrg) return;
+        if (preserveProject && currentOrgProjects().some(project => project.name === preserveProject)) {
+          selectedGitProject = preserveProject;
+        }
+        renderProjectSelect();
+        ensureSelectedProjectInCurrentOrg();
+        if (options.reloadRefs !== false) {
+          loadGitRefs().catch(error => {
+            $("gitStatus").textContent = `读取 Git 版本失败：${error.message}`;
+          });
+        }
+      }
+    }
+
+    function mergeCloudProjects(cloudProjects, orgId = selectedGitOrg) {
+      const org = (projectsCache?.organizations || []).find(item => item.id === orgId) || {};
+      const allowedSpaces = new Set([orgId, org.name, org.namespace_id].filter(Boolean));
+      const baseProjects = (projectsCache.local_projects || []).filter(project => allowedSpaces.has(codeupSpace(project.remote_url || "")));
+      const byName = new Map(baseProjects.map(project => [project.name, {...project}]));
+      for (const project of cloudProjects) {
+        const existing = byName.get(project.name);
+        if (existing) {
+          existing.source = "本机 + Codeup";
+          existing.display_name = project.display_name || existing.display_name;
+          existing.web_url = project.web_url || "";
+          existing.default_branch = project.default_branch || "";
+          continue;
+        }
+        byName.set(project.name, {
+          ...project,
+          org_id: orgId,
+          path: "",
+          current_branch: project.default_branch || "",
+          selected: false,
+          cloned: false,
+          source: "Codeup"
+        });
+      }
+      projectsCache.projects = [...byName.values()].sort((a, b) => Number(!a.cloned) - Number(!b.cloned) || a.name.localeCompare(b.name));
+    }
+
+    async function loadGitRefs() {
+      if (!selectedGitProject) return;
+      const requestedOrg = selectedGitOrg;
+      const requestedProject = selectedGitProject;
+      const selectedProject = currentProject();
+      const source = selectedProject?.cloned ? "local" : "cloud";
+      const cacheKey = `${requestedOrg}::${requestedProject}::${source}`;
+      if (refsCacheByProject[cacheKey]) {
+        if (requestedOrg !== selectedGitOrg || requestedProject !== selectedGitProject) return;
+        refsCache = refsCacheByProject[cacheKey];
+        $("gitStatus").textContent = gitStatusText(refsCache);
+        renderGitRefs();
+        return;
+      }
+      if (source === "cloud" && !projectsCache?.cloud_enabled) {
+        clearGitRefs(`${selectedProject?.display_name || selectedGitProject} 尚未克隆到本机，且未配置 Codeup token，无法直接读取。`);
+        return;
+      }
+      $("gitStatus").textContent = source === "cloud"
+        ? `正在从 Codeup 读取 ${requestedProject} 的分支、Tag 和最近提交...`
+        : `正在读取 ${requestedProject} 的 Git 分支、Tag 和最近提交...`;
+      $("gitRefs").innerHTML = "";
+      const params = new URLSearchParams({project: requestedProject, org: requestedOrg, source});
+      const response = await fetch(`/api/refs?${params.toString()}`);
+      const payload = await response.json();
+      if (!response.ok || payload.error) {
+        throw new Error(payload.error || `HTTP ${response.status}`);
+      }
+      if (requestedOrg !== selectedGitOrg || requestedProject !== selectedGitProject) return;
+      refsCacheByProject[cacheKey] = payload;
+      refsCache = payload;
+      $("gitStatus").textContent = gitStatusText(payload);
+      renderGitRefs();
+    }
+
+    function gitStatusText(payload) {
+      const sourceLabel = payload.source === "cloud" ? "Codeup" : "本机";
+      return `项目：${payload.project}，来源：${sourceLabel}，当前分支：${payload.current_branch || "未知"}`;
+    }
+
+    function currentProject() {
+      return currentOrgProjects().find(project => project.name === selectedGitProject);
+    }
+
+    function clearGitRefs(message) {
+      $("gitRefs").innerHTML = "";
+      $("gitStatus").textContent = message;
+    }
+
+    function closeGitPicker() {
+      $("gitModal").classList.add("hidden");
+      $("gitModal").setAttribute("aria-hidden", "true");
+    }
+
+    function renderGitRefs() {
+      if (!refsCache) return;
+      const query = $("gitSearch").value.trim().toLowerCase();
+      const sections = [
+        ["本地分支", refsCache.local_branches || [], ref => ({ref, title: ref, meta: "本地分支"})],
+        ["远程分支", refsCache.remote_branches || [], ref => ({ref, title: ref, meta: "远程分支"})],
+        ["Tag", refsCache.tags || [], ref => ({ref, title: ref, meta: "Tag"})],
+        ["最近提交", refsCache.commits || [], commit => ({ref: commit.hash, title: `${commit.short} ${commit.subject}`, meta: `${commit.date} · ${commit.author}`})],
+      ];
+      $("gitRefs").innerHTML = sections.map(([title, items, mapper]) => {
+        const mapped = items.map(mapper).filter(item => {
+          const text = `${item.ref} ${item.title} ${item.meta}`.toLowerCase();
+          return !query || text.includes(query);
+        }).slice(0, title === "最近提交" ? 80 : 120);
+        if (!mapped.length) return "";
+        return `
+          <section class="ref-section">
+            <h3>${escapeHtml(title)}</h3>
+            <div class="ref-list">
+              ${mapped.map(item => `
+                <button class="ref-item" data-ref="${escapeHtml(item.ref)}">
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <span>${escapeHtml(item.meta)}</span>
+                </button>
+              `).join("")}
+            </div>
+          </section>
+        `;
+      }).join("") || `<div class="empty">没有找到匹配的分支、Tag 或提交。</div>`;
+      document.querySelectorAll(".ref-item").forEach(button => {
+        button.addEventListener("click", () => selectGitRef(button.dataset.ref || ""));
+      });
+    }
+
+    function selectGitRef(ref) {
+      if (!ref) return;
+      const selectedProject = currentProject();
+      const source = selectedProject?.cloned ? "local" : "cloud";
+      const sourceLabel = source === "cloud" ? "Codeup" : "Git";
+      if (gitPickTarget === "old") {
+        oldGitRef = ref;
+        oldGitProject = selectedGitProject;
+        oldGitOrg = selectedGitOrg;
+        oldGitSource = source;
+        oldFiles = [];
+        $("oldInput").value = "";
+        $("oldPath").textContent = `${sourceLabel}：${oldGitProject} / ${shortRef(ref)}`;
+        $("oldPath").classList.add("is-selected");
+      } else {
+        newGitRef = ref;
+        newGitProject = selectedGitProject;
+        newGitOrg = selectedGitOrg;
+        newGitSource = source;
+        newFiles = [];
+        $("newInput").value = "";
+        $("newPath").textContent = `${sourceLabel}：${newGitProject} / ${shortRef(ref)}`;
+        $("newPath").classList.add("is-selected");
+      }
+      closeGitPicker();
+      updateReady();
+    }
+
+    function shortRef(ref) {
+      return ref.length > 16 && /^[0-9a-f]{40}$/i.test(ref) ? ref.slice(0, 7) : ref;
+    }
+
+    async function parseFiles(files) {
+      const tables = {};
+      for (const item of files) {
+        const table = { rows: {}, columns: [], duplicates: {}, errors: [] };
+        try {
+          const text = await item.file.text();
+          const parsed = parseText(item.path, text);
+          table.columns = parsed.columns;
+          const rule = tableRule(item.path);
+          const keyFields = rule.primary_key?.length ? rule.primary_key : inferKey(parsed.columns);
+          parsed.rows.forEach((row, index) => {
+            if (isEmptyRow(row)) return;
+            let key = keyFields.length && keyFields.every(field => row[field] !== undefined && row[field] !== "")
+              ? keyFields.map(field => row[field]).join("|")
+              : `row:${index + 2}`;
+            if (table.rows[key]) {
+              table.duplicates[key] = (table.duplicates[key] || 1) + 1;
+              key = `${key}#duplicate@${index + 2}`;
+            }
+            table.rows[key] = row;
+          });
+        } catch (error) {
+          table.errors.push(`${error.name}: ${error.message}`);
+        }
+        tables[item.path] = table;
+      }
+      return tables;
+    }
+
+    function parseText(path, text) {
+      if (ext(path) === ".json") {
+        const data = JSON.parse(text.replace(/^\uFEFF/, ""));
+        const rows = Array.isArray(data) ? data.map((item, index) => typeof item === "object" && item ? item : {index, value: item}) : [flatten(data)];
+        const columns = [...new Set(rows.flatMap(row => Object.keys(row)))];
+        return { columns, rows: rows.map(normalizeRow) };
+      }
+      const delimiter = ext(path) === ".tsv" ? "\t" : ",";
+      const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(line => line.trim());
+      const rows = lines.map(line => parseDelimitedLine(line, delimiter));
+      const header = rows.shift() || [];
+      return {
+        columns: header,
+        rows: rows.map(values => normalizeRow(Object.fromEntries(header.map((col, i) => [col, values[i] ?? ""]))))
+      };
+    }
+
+    function parseDelimitedLine(line, delimiter) {
+      const out = [];
+      let value = "";
+      let quoted = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"' && line[i + 1] === '"') {
+          value += '"';
+          i++;
+        } else if (char === '"') {
+          quoted = !quoted;
+        } else if (char === delimiter && !quoted) {
+          out.push(value);
+          value = "";
+        } else {
+          value += char;
+        }
+      }
+      out.push(value);
+      return out.map(v => v.trim());
+    }
+
+    function validateRows(table, rows, rule) {
+      const issues = [];
+      for (const [key, row] of Object.entries(rows)) {
+        if (isEmptyRow(row)) continue;
+        for (const fieldRule of rule.field_rules || []) {
+          const value = row[fieldRule.field] ?? "";
+          if (fieldRule.required && value === "") {
+            issues.push({severity: fieldRule.severity || "medium", type: "validation", table, key, field: fieldRule.field, new: value, reason: "Required field is empty"});
+            continue;
+          }
+          const numeric = Number(value);
+          if (value !== "" && !Number.isNaN(numeric)) {
+            if (fieldRule.min !== undefined && numeric < Number(fieldRule.min)) {
+              issues.push({severity: fieldRule.severity || "medium", type: "validation", table, key, field: fieldRule.field, new: value, reason: "Value is below minimum"});
+            }
+            if (fieldRule.max !== undefined && numeric > Number(fieldRule.max)) {
+              issues.push({severity: fieldRule.severity || "medium", type: "validation", table, key, field: fieldRule.field, new: value, reason: "Value is above maximum"});
+            }
+          }
+          if (fieldRule.enum && !fieldRule.enum.map(String).includes(String(value))) {
+            issues.push({severity: fieldRule.severity || "medium", type: "validation", table, key, field: fieldRule.field, new: value, reason: "Value is outside enum"});
+          }
+        }
+      }
+      return issues;
+    }
+
+    function validationSignature(issue) {
+      return [issue.table, issue.key, issue.field, issue.reason, rawText(issue.new)].join("\u0000");
+    }
+
+    function tableRule(table) {
+      const found = (rules.tables || []).find(rule => match(table, rule.pattern));
+      return found || {};
+    }
+
+    function normalizeRules(value) {
+      return {...DEFAULT_RULES, ...value, tables: value.tables || []};
+    }
+
+    function included(path, ruleSet) {
+      return (ruleSet.include || DEFAULT_RULES.include).some(pattern => match(path, pattern))
+        && !(ruleSet.exclude || []).some(pattern => match(path, pattern));
+    }
+
+    function match(path, pattern) {
+      if (!pattern) return false;
+      if (pattern.startsWith("**/") && match(path, pattern.slice(3))) return true;
+      return globToRegExp(pattern).test(path);
+    }
+
+    function globToRegExp(pattern) {
+      let source = "^";
+      for (let i = 0; i < pattern.length; i++) {
+        const char = pattern[i];
+        const next = pattern[i + 1];
+        if (char === "*" && next === "*") {
+          const after = pattern[i + 2];
+          if (after === "/") {
+            source += "(?:.*/)?";
+            i += 2;
+          } else {
+            source += ".*";
+            i += 1;
+          }
+        } else if (char === "*") {
+          source += "[^/]*";
+        } else if (char === "?") {
+          source += "[^/]";
+        } else {
+          source += char.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+        }
+      }
+      source += "$";
+      return new RegExp(source);
+    }
+
+    function inferKey(columns) {
+      const found = keyCandidates.find(key => columns.includes(key));
+      return found ? [found] : columns.length ? [columns[0]] : [];
+    }
+
+    function addChange(changes, summaries, change) {
+      changes.push({severity: "info", type: "", table: "", key: "", field: "", old: "", new: "", reason: "", ...change});
+      summaries[change.table] ||= {};
+      summaries[change.table][change.type] = (summaries[change.table][change.type] || 0) + 1;
+    }
+
+    function sortChanges(changes) {
+      const rank = {critical: 0, high: 1, medium: 2, low: 3, info: 4};
+      return changes.sort((a, b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9) || a.table.localeCompare(b.table));
+    }
+
+    function retainDisplayChanges(changes, limit) {
+      const protectedTypes = new Set(["added_row", "removed_row", "added_file", "removed_file", "schema_changed", "validation"]);
+      const sorted = sortChanges([...changes]);
+      const kept = [];
+      const seen = new Set();
+      const add = (change) => {
+        if (kept.length >= limit) return;
+        const key = [change.type, change.table, change.key, change.field, rawText(change.old), rawText(change.new), change.reason].join("\u0001");
+        if (seen.has(key)) return;
+        seen.add(key);
+        kept.push(change);
+      };
+      sorted.filter(change => protectedTypes.has(change.type)).forEach(add);
+      sorted.forEach(add);
+      return kept;
+    }
+
+    function fillTypeFilter() {
+      const select = $("type");
+      select.innerHTML = '<option value="">全部类型</option>';
+      [...new Set(result.changes.map(change => change.type))].sort().forEach(type => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = displayType(type);
+        select.appendChild(option);
+      });
+    }
+
+    function renderMetrics() {
+      const labels = [
+        ["changed_tables", "变化配置"],
+        ["added_rows", "新增记录"],
+        ["removed_rows", "删除记录"],
+        ["modified_fields", "修改字段/属性"],
+        ["validation_issues", "校验问题"],
+        ["parse_errors", "解析错误"]
+      ];
+      $("metrics").innerHTML = labels.map(([key, label]) => `<div class="metric">${label}<strong>${result.stats[key] || 0}</strong></div>`).join("");
+    }
+
+    function renderRows() {
+      if (!result) return;
+      const q = $("query").value.trim().toLowerCase();
+      const sev = $("severity").value;
+      const type = $("type").value;
+      const filtered = result.changes.filter(change => {
+        if (sev && change.severity !== sev) return false;
+        if (type && change.type !== type) return false;
+        if (!q) return true;
+        return [displaySeverity(change.severity), displayType(change.type), change.table, change.key, change.field, displayReason(change.reason), rawText(change.old), rawText(change.new)].join(" ").toLowerCase().includes(q);
+      }).slice(0, 2000);
+      $("rows").innerHTML = filtered.map(change => `
+        <tr>
+          <td class="col-risk sev-${escapeHtml(change.severity)}">${escapeHtml(displaySeverity(change.severity))}</td>
+          <td class="col-type">${escapeHtml(displayType(change.type))}</td>
+          <td class="col-table"><code>${escapeHtml(change.table)}</code></td>
+          <td class="col-key"><code>${escapeHtml(change.key)}</code></td>
+          <td class="col-field"><code>${escapeHtml(change.field)}</code></td>
+          <td class="col-old"><code class="value-cell">${renderValue(change, "old")}</code></td>
+          <td class="col-new"><code class="value-cell">${renderValue(change, "new")}</code></td>
+          <td class="col-reason">${escapeHtml(displayReason(change.reason))}</td>
+        </tr>
+      `).join("");
+      scheduleFloatingHeaderUpdate();
+    }
+
+    function renderValue(change, side) {
+      const oldText = rawText(change.old);
+      const newText = rawText(change.new);
+      const text = side === "old" ? oldText : newText;
+      const empty = text === "" || text === "null" || text === "undefined";
+      if (change.type === "added_row" || change.type === "added_file") {
+        if (side === "old" && empty) return '<span class="blank-added"></span>';
+        if (side === "new") return `<span class="diff-added">${escapeHtml(newText)}</span>`;
+      }
+      if (change.type === "removed_row" || change.type === "removed_file") {
+        if (side === "new" && empty) return '<span class="blank-removed"></span>';
+        if (side === "old") return `<span class="diff-removed">${escapeHtml(oldText)}</span>`;
+      }
+      if (change.type === "schema_changed") {
+        if (side === "old" && empty && newText) return '<span class="blank-added"></span>';
+        if (side === "new" && empty && oldText) return '<span class="blank-removed"></span>';
+        return renderSchemaValue(oldText, newText, side);
+      }
+      if (change.type === "modified_field") {
+        if (side === "old" && empty && newText) return '<span class="blank-added"></span>';
+        if (side === "new" && empty && oldText) return '<span class="blank-removed"></span>';
+        return diffValueHtml(oldText, newText, side);
+      }
+      return escapeHtml(text);
+    }
+
+    function renderSchemaValue(oldText, newText, side) {
+      const oldFields = parseSchemaFields(oldText);
+      const newFields = parseSchemaFields(newText);
+      if (!oldFields.length && !newFields.length) {
+        return diffValueHtml(oldText, newText, side);
+      }
+      const oldSet = new Set(oldFields);
+      const newSet = new Set(newFields);
+      const fields = side === "old" ? oldFields : newFields;
+      const className = side === "old" ? "diff-removed" : "diff-added";
+      return fields.map(field => {
+        const changed = side === "old" ? !newSet.has(field) : !oldSet.has(field);
+        const text = escapeHtml(field);
+        return changed ? `<span class="${className}">${text}</span>` : text;
+      }).join(", ");
+    }
+
+    function parseSchemaFields(text) {
+      return String(text || "")
+        .split(",")
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+
+    function diffValueHtml(oldText, newText, side) {
+      if (oldText === newText) return escapeHtml(side === "old" ? oldText : newText);
+      if (oldText.length + newText.length > 12000) {
+        return side === "old"
+          ? prefixSuffixDiffHtml(oldText, newText, "diff-removed")
+          : prefixSuffixDiffHtml(newText, oldText, "diff-added");
+      }
+      const diff = tokenDiff(oldText, newText);
+      const chunks = side === "old" ? diff.oldChunks : diff.newChunks;
+      const className = side === "old" ? "diff-removed" : "diff-added";
+      const html = chunks.map(chunk => chunk.changed
+        ? `<span class="${className}">${escapeHtml(chunk.text)}</span>`
+        : escapeHtml(chunk.text)
+      ).join("");
+      return html.includes(`class="${className}"`) ? html : `<span class="${className}">${escapeHtml(side === "old" ? oldText : newText)}</span>`;
+    }
+
+    function prefixSuffixDiffHtml(text, otherText, className) {
+      let prefix = 0;
+      const prefixLimit = Math.min(text.length, otherText.length);
+      while (prefix < prefixLimit && text[prefix] === otherText[prefix]) prefix++;
+      let suffix = 0;
+      const suffixLimit = Math.min(text.length - prefix, otherText.length - prefix);
+      while (suffix < suffixLimit && text[text.length - 1 - suffix] === otherText[otherText.length - 1 - suffix]) suffix++;
+      const before = text.slice(0, prefix);
+      const changed = text.slice(prefix, text.length - suffix);
+      const after = suffix ? text.slice(text.length - suffix) : "";
+      if (!changed) return `<span class="${className}">${escapeHtml(text)}</span>`;
+      return `${escapeHtml(before)}<span class="${className}">${escapeHtml(changed)}</span>${escapeHtml(after)}`;
+    }
+
+    function tokenDiff(oldText, newText) {
+      const oldTokens = diffTokens(oldText);
+      const newTokens = diffTokens(newText);
+      if (oldTokens.length * newTokens.length > 120000) {
+        return {
+          oldChunks: [{text: oldText, changed: true}],
+          newChunks: [{text: newText, changed: true}]
+        };
+      }
+      const dp = Array.from({length: oldTokens.length + 1}, () => Array(newTokens.length + 1).fill(0));
+      for (let i = oldTokens.length - 1; i >= 0; i--) {
+        for (let j = newTokens.length - 1; j >= 0; j--) {
+          dp[i][j] = oldTokens[i] === newTokens[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+        }
+      }
+      const oldChunks = [];
+      const newChunks = [];
+      let i = 0;
+      let j = 0;
+      while (i < oldTokens.length || j < newTokens.length) {
+        if (i < oldTokens.length && j < newTokens.length && oldTokens[i] === newTokens[j]) {
+          pushChunk(oldChunks, oldTokens[i], false);
+          pushChunk(newChunks, newTokens[j], false);
+          i++;
+          j++;
+        } else if (j >= newTokens.length || (i < oldTokens.length && dp[i + 1][j] >= dp[i][j + 1])) {
+          pushChunk(oldChunks, oldTokens[i], true);
+          i++;
+        } else {
+          pushChunk(newChunks, newTokens[j], true);
+          j++;
+        }
+      }
+      return {oldChunks, newChunks};
+    }
+
+    function diffTokens(text) {
+      return String(text).match(/\s+|[\p{L}\p{N}_]+|[^\s\p{L}\p{N}_]+/gu) || [String(text)];
+    }
+
+    function pushChunk(chunks, text, changed) {
+      const last = chunks[chunks.length - 1];
+      if (last && last.changed === changed) {
+        last.text += text;
+      } else {
+        chunks.push({text, changed});
+      }
+    }
+
+    function setupFloatingHeader() {
+      const wrap = document.querySelector(".table-wrap");
+      const table = wrap?.querySelector("table");
+      const thead = table?.querySelector("thead");
+      if (!wrap || !table || !thead) return;
+      floatingHeader = document.createElement("div");
+      floatingHeader.className = "floating-head";
+      floatingHeader.setAttribute("aria-hidden", "true");
+      floatingHeader.innerHTML = "<table><colgroup></colgroup><thead></thead></table>";
+      document.body.appendChild(floatingHeader);
+      window.addEventListener("scroll", scheduleFloatingHeaderUpdate, {passive: true});
+      window.addEventListener("resize", scheduleFloatingHeaderUpdate);
+      wrap.addEventListener("scroll", scheduleFloatingHeaderUpdate, {passive: true});
+      scheduleFloatingHeaderUpdate();
+    }
+
+    function scheduleFloatingHeaderUpdate() {
+      if (floatingHeaderFrame) return;
+      floatingHeaderFrame = requestAnimationFrame(() => {
+        floatingHeaderFrame = 0;
+        updateFloatingHeader();
+      });
+    }
+
+    function updateFloatingHeader() {
+      if (!floatingHeader) return;
+      const wrap = document.querySelector(".table-wrap");
+      const table = wrap?.querySelector("table");
+      const thead = table?.querySelector("thead");
+      const floatingTable = floatingHeader.querySelector("table");
+      const floatingColgroup = floatingHeader.querySelector("colgroup");
+      const floatingThead = floatingHeader.querySelector("thead");
+      if (!wrap || !table || !thead || !floatingTable || !floatingColgroup || !floatingThead) return;
+
+      const tableRect = table.getBoundingClientRect();
+      const wrapRect = wrap.getBoundingClientRect();
+      const headRect = thead.getBoundingClientRect();
+      const headHeight = Math.max(1, headRect.height);
+      const shouldFloat = tableRect.top < 0 && tableRect.bottom > headHeight && wrapRect.bottom > headHeight;
+
+      floatingHeader.classList.toggle("visible", shouldFloat);
+      if (!shouldFloat) return;
+
+      if (floatingHeaderSignature !== thead.innerHTML) {
+        floatingThead.innerHTML = thead.innerHTML;
+        floatingHeaderSignature = thead.innerHTML;
+      }
+
+      const sourceCells = [...thead.querySelectorAll("th")];
+      const sourceWidths = sourceCells.map(cell => Math.ceil(cell.getBoundingClientRect().width));
+      const tableWidth = Math.max(Math.ceil(tableRect.width), sourceWidths.reduce((total, width) => total + width, 0));
+      floatingColgroup.innerHTML = sourceWidths.map(width => `<col style="width:${width}px">`).join("");
+
+      const left = Math.max(0, wrapRect.left);
+      const width = Math.min(wrapRect.width, window.innerWidth - left);
+      floatingHeader.style.left = `${left}px`;
+      floatingHeader.style.width = `${width}px`;
+      floatingHeader.style.height = `${headHeight}px`;
+      floatingTable.style.width = `${tableWidth}px`;
+      floatingTable.style.minWidth = `${tableWidth}px`;
+      floatingTable.style.transform = `translateX(${-wrap.scrollLeft}px)`;
+
+      const cloneCells = [...floatingThead.querySelectorAll("th")];
+      sourceWidths.forEach((cellWidth, index) => {
+        const clone = cloneCells[index];
+        if (!clone) return;
+        clone.style.setProperty("width", `${cellWidth}px`, "important");
+        clone.style.setProperty("min-width", `${cellWidth}px`, "important");
+        clone.style.setProperty("max-width", `${cellWidth}px`, "important");
+      });
+    }
+
+    function displaySeverity(value) {
+      return severityLabels[value] || value || "";
+    }
+
+    function displayType(value) {
+      return typeLabels[value] || value || "";
+    }
+
+    function displayReason(value) {
+      if (!value) return "";
+      const duplicate = String(value).match(/^Duplicate primary key appears (\d+) times in new config$/);
+      if (duplicate) return `新配置标识重复${duplicate[1]}次`;
+      if (String(value).startsWith("Reference target table missing:")) {
+        return String(value).replace("Reference target table missing:", "引用目标配置缺失：");
+      }
+      if (String(value).startsWith("Broken reference to ")) {
+        return String(value).replace("Broken reference to ", "引用不存在：");
+      }
+      return reasonLabels[value] || value;
+    }
+
+    function flatten(value, prefix = "") {
+      if (Array.isArray(value)) return {[prefix || "value"]: JSON.stringify(value)};
+      if (value && typeof value === "object") {
+        return Object.fromEntries(Object.entries(value).flatMap(([key, child]) => Object.entries(flatten(child, prefix ? `${prefix}.${key}` : key))));
+      }
+      return {[prefix || "value"]: value ?? ""};
+    }
+
+    function normalizeRow(row) {
+      return Object.fromEntries(Object.entries(row).map(([key, value]) => [key, value === null || value === undefined ? "" : String(value).trim()]));
+    }
+
+    function isEmptyRow(row) {
+      return Object.values(row).every(value => value === "");
+    }
+
+    function ext(path) {
+      const index = path.lastIndexOf(".");
+      return index >= 0 ? path.slice(index).toLowerCase() : "";
+    }
+
+    function rawText(value) {
+      return typeof value === "string" ? value : JSON.stringify(value ?? "");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
+    }
+
+    function toCsv(changes) {
+      const header = ["severity", "type", "table", "key", "field", "old", "new", "reason"];
+      const lines = [header.join(",")];
+      for (const change of changes) {
+        lines.push(header.map(key => `"${String(rawText(change[key])).replace(/"/g, '""')}"`).join(","));
+      }
+      return "\uFEFF" + lines.join("\n");
+    }
+
+    function download(name, content, type) {
+      const url = URL.createObjectURL(new Blob([content], {type}));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function setStatus(message, state = "default") {
+      const status = $("status");
+      status.textContent = message;
+      status.classList.toggle("status-ready", state === "ready");
+      status.classList.toggle("status-blocked", state === "blocked");
+    }
+
+    function clearComparisonResult() {
+      result = null;
+      $("metrics").innerHTML = "";
+      $("rows").innerHTML = "";
+      $("downloadCsv").disabled = true;
+      $("downloadJson").disabled = true;
+      $("type").innerHTML = '<option value="">全部类型</option>';
+      clearElapsedText();
+      scheduleFloatingHeaderUpdate();
+    }
+
+    function isNoComparableResult(payload) {
+      const stats = payload?.stats || {};
+      return Number(stats.old_tables || 0) === 0
+        && Number(stats.new_tables || 0) === 0
+        && Number(payload?.total_changes || 0) === 0
+        && !payload?.changes?.length;
+    }
+
+    function clearElapsedText() {
+      if (operationTimer) {
+        clearInterval(operationTimer);
+        operationTimer = 0;
+      }
+      operationStartedAt = 0;
+      operationMode = "";
+      $("elapsedStatus").innerHTML = "&nbsp;";
+    }
+
+    function beginOperationTimer(label) {
+      operationMode = label || "query";
+      operationStartedAt = performance.now();
+      updateElapsedText();
+      if (operationTimer) clearInterval(operationTimer);
+      operationTimer = window.setInterval(updateElapsedText, 1000);
+    }
+
+    function finishOperationTimer(label = "花费耗时") {
+      if (!operationStartedAt) return;
+      if (operationTimer) {
+        clearInterval(operationTimer);
+        operationTimer = 0;
+      }
+      const elapsed = formatElapsed(performance.now() - operationStartedAt);
+      const text = `${label}：${elapsed}`;
+      $("elapsedStatus").textContent = text;
+      operationStartedAt = 0;
+      operationMode = "";
+    }
+
+    function updateElapsedText() {
+      if (!operationStartedAt) return;
+      const elapsed = formatElapsed(performance.now() - operationStartedAt);
+      const label = operationMode === "query" ? "当前耗时" : "花费耗时";
+      $("elapsedStatus").textContent = `${label}：${elapsed}`;
+    }
+
+    function formatElapsed(ms) {
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const hours = Math.floor(total / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      const seconds = total % 60;
+      if (hours > 0) {
+        return [hours, minutes, seconds].map(value => String(value).padStart(2, "0")).join(":");
+      }
+      return [minutes, seconds].map(value => String(value).padStart(2, "0")).join(":");
+    }
+
+    async function loadDemo() {
+      const oldText = "id,name,reward,difficulty\n1,coin_small,10,1\n2,coin_big,100,4\n3,hint,1,2\n";
+      const newText = "id,name,reward,difficulty\n1,coin_small,10,1\n2,coin_big,200,12\n4,shuffle,1,3\n";
+      const makeFile = (name, text) => new File([text], name, {type: "text/csv"});
+      oldFiles = [{file: makeFile("items.csv", oldText), path: "items.csv"}];
+      newFiles = [{file: makeFile("items.csv", newText), path: "items.csv"}];
+      rules = normalizeRules({
+        include: ["*.csv", "**/*.csv"],
+        tables: [{
+          pattern: "items.csv",
+          primary_key: ["id"],
+          important_fields: {reward: "high", difficulty: "high"},
+          field_rules: [{field: "difficulty", min: 1, max: 10, severity: "high"}],
+          removed_row_severity: "high"
+        }]
+      });
+      $("oldPath").textContent = "示例旧目录";
+      $("newPath").textContent = "示例新目录";
+      $("oldPath").classList.add("is-selected");
+      $("newPath").classList.add("is-selected");
+      $("rulesPath").textContent = "示例规则";
+      updateReady();
+      await compare();
+    }
+  </script>
+</body>
+</html>

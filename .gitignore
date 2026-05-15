@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+*.egg-info/
+.DS_Store
+.cache/
+logs/*.log
+reports/
+diff_report/
+.codeup.env
+studio_config_sources.json
