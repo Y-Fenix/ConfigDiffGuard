@@ -1,7 +1,9 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
+from config_diff_guard import server
 from config_diff_guard.cli import main
 from config_diff_guard.engine import compare_sources
 from config_diff_guard.models import Severity
@@ -62,6 +64,35 @@ class DemoReportTest(unittest.TestCase):
         result = compare_sources(old_files, new_files, rules, "old", "new")
         self.assertEqual(result.stats.validation_issues, 1)
         self.assertEqual([change.reason for change in result.changes if change.reason == "Required field is empty"], ["Required field is empty"])
+
+    def test_provider_config_supports_mainstream_platforms(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "provider_accounts.json"
+            config_path.write_text(
+                """
+                {
+                  "workspaces": [
+                    {"id": "gh", "name": "GitHub", "provider": "github", "owner": "demo", "token_env": "GITHUB_TOKEN"},
+                    {"id": "gl", "name": "GitLab", "provider": "gitlab", "group": "demo", "token_env": "GITLAB_TOKEN"},
+                    {"id": "ge", "name": "Gitee", "provider": "gitee", "owner": "demo", "token_env": "GITEE_TOKEN"},
+                    {"id": "bb", "name": "Bitbucket", "provider": "bitbucket", "workspace": "demo", "token_env": "BITBUCKET_TOKEN"}
+                  ]
+                }
+                """,
+                encoding="utf-8",
+            )
+            env = {
+                "CONFIG_DIFF_PROVIDER_CONFIG": str(config_path),
+                "GITHUB_TOKEN": "gh-token",
+                "GITLAB_TOKEN": "gl-token",
+                "GITEE_TOKEN": "ge-token",
+                "BITBUCKET_TOKEN": "bb-token",
+            }
+            with patch.dict("os.environ", env):
+                workspaces = server.provider_config_workspaces()
+        self.assertEqual([workspace["provider"] for workspace in workspaces], ["github", "gitlab", "gitee", "bitbucket"])
+        self.assertEqual([workspace["provider_label"] for workspace in workspaces], ["GitHub", "GitLab", "Gitee", "Bitbucket"])
+        self.assertEqual([workspace["token"] for workspace in workspaces], ["gh-token", "gl-token", "ge-token", "bb-token"])
 
 
 if __name__ == "__main__":

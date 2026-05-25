@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ConfigDiffGuard 配置对比</title>
+  <title>Maxx 配置对比</title>
+  <link rel="icon" href="./柴柴.ico" type="image/x-icon" />
   <style>
     :root {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -349,7 +350,7 @@
 </head>
 <body>
   <header>
-    <h1>ConfigDiffGuard 配置对比</h1>
+    <h1>Maxx 配置对比</h1>
     <button id="loadDemo">载入示例</button>
   </header>
   <main>
@@ -500,6 +501,8 @@
     let newGitOrg = "";
     let oldGitSource = "";
     let newGitSource = "";
+    let oldGitProviderLabel = "";
+    let newGitProviderLabel = "";
     let selectedGitOrg = "";
     let selectedGitProject = "";
     let gitPickTarget = "";
@@ -568,6 +571,7 @@
       oldGitProject = "";
       oldGitOrg = "";
       oldGitSource = "";
+      oldGitProviderLabel = "";
       $("oldPath").textContent = `${oldFiles.length} 个文件`;
       $("oldPath").classList.toggle("is-selected", oldFiles.length > 0);
       updateReady();
@@ -578,6 +582,7 @@
       newGitProject = "";
       newGitOrg = "";
       newGitSource = "";
+      newGitProviderLabel = "";
       $("newPath").textContent = `${newFiles.length} 个文件`;
       $("newPath").classList.toggle("is-selected", newFiles.length > 0);
       updateReady();
@@ -600,7 +605,7 @@
       const hasGit = oldGitRef && newGitRef && sameGitProject && !oldFiles.length && !newFiles.length;
       $("compare").disabled = !(hasDirs || hasGit);
       if (hasGit) {
-        const sourceLabel = oldGitSource === "cloud" ? "Codeup" : "本机 Git";
+        const sourceLabel = oldGitSource === "cloud" ? (oldGitProviderLabel || "远程平台") : "本机 Git";
         setStatus(`可以开始 ${sourceLabel} 版本对比：${oldGitProject} / ${oldGitRef} -> ${newGitRef}`, "ready");
       } else if (oldGitProject && newGitProject && !sameGitProject) {
         setStatus(`旧分支和新分支必须来自同一个项目和工作室。当前：${oldGitProject} / ${newGitProject}，请改成同一个项目。`, "blocked");
@@ -655,7 +660,7 @@
 
     async function compareGit() {
       $("compare").disabled = true;
-      const sourceLabel = oldGitSource === "cloud" ? "Codeup" : "本机 Git";
+      const sourceLabel = oldGitSource === "cloud" ? (oldGitProviderLabel || "远程平台") : "本机 Git";
       beginOperationTimer("query");
       setStatus(`正在对比 ${sourceLabel} 版本：${oldGitProject} / ${oldGitRef} -> ${newGitRef} ...`);
       try {
@@ -684,7 +689,7 @@
         setStatus(`${sourceLabel} 对比完成：${result.old} -> ${result.new}，已生成 ${result.changes.length}/${result.total_changes || result.changes.length} 条风险优先明细，页面展示前 ${Math.min(result.changes.length, 2000)} 条，导出为完整结果。`, "ready");
       } catch (error) {
         finishOperationTimer("花费耗时");
-        setStatus(`Git 对比失败：${error.message}。请确认通过“打开配置对比工具.command”启动，而不是直接打开 index.html。`, "blocked");
+        setStatus(`Git 对比失败：${error.message}。请确认通过“本地开启.command”启动，而不是直接打开 index.html。`, "blocked");
       } finally {
         $("compare").disabled = false;
       }
@@ -824,7 +829,7 @@
         ensureSelectedProjectInCurrentOrg();
         await loadGitRefs();
       } catch (error) {
-        $("gitStatus").textContent = `读取项目或 Git 版本失败：${error.message}。请通过“打开配置对比工具.command”启动工具。`;
+        $("gitStatus").textContent = `读取项目或 Git 版本失败：${error.message}。请通过“本地开启.command”启动工具。`;
       }
     }
 
@@ -873,7 +878,7 @@
       const note = $("gitProjectNote");
       select.innerHTML = projects.map(project => `
         <option value="${escapeHtml(project.name)}"${project.name === selectedGitProject ? " selected" : ""}>
-          ${escapeHtml(project.display_name || project.name)}${project.current_branch ? `（${escapeHtml(project.current_branch)}）` : ""}${project.cloned ? "" : " - Codeup"}
+          ${escapeHtml(project.display_name || project.name)}${project.current_branch ? `（${escapeHtml(project.current_branch)}）` : ""}${project.cloned ? "" : ` - ${escapeHtml(project.provider_label || "远程")}`}
         </option>
       `).join("");
       if (!projects.some(project => project.name === selectedGitProject)) {
@@ -885,17 +890,18 @@
       const localCount = projects.filter(project => project.cloned).length;
       const cloudCount = projects.filter(project => !project.cloned).length;
       const orgName = (projectsCache.organizations || []).find(org => org.id === selectedGitOrg)?.name || "当前工作室";
+      const providerName = (projectsCache.organizations || []).find(org => org.id === selectedGitOrg)?.provider_label || "远程平台";
       if (cloudProjectsLoading) {
-        note.textContent = `已先展示 ${localCount} 个本机项目，正在后台同步 ${orgName} 的 Codeup 权限项目...`;
+        note.textContent = `已先展示 ${localCount} 个本机项目，正在后台同步 ${orgName} 的 ${providerName} 权限项目...`;
       } else if (projectsCache.cloud_enabled) {
         note.textContent = cloudCount
-          ? `${orgName}：已展示 ${localCount} 个本机项目，另有 ${cloudCount} 个 Codeup 项目可直接云端对比，无需 clone。`
-          : `${orgName}：已接入 Codeup 权限项目；当前可对比 ${localCount} 个本机项目。`;
+          ? `${orgName}：已展示 ${localCount} 个本机项目，另有 ${cloudCount} 个${providerName}项目可直接云端对比，无需 clone。`
+          : `${orgName}：已接入${providerName}权限项目；当前可对比 ${localCount} 个本机项目。`;
       } else {
-        note.textContent = `当前展示 ${localCount} 个本机已克隆 Git 项目。要展示 Codeup 权限下全部项目，请在启动前配置 YUNXIAO_TOKEN。`;
+        note.textContent = `当前展示 ${localCount} 个本机已克隆 Git 项目。要展示远程权限项目，请配置 provider_accounts.json 或平台 token。`;
       }
       if (projectsCache.cloud_error) {
-        note.textContent += ` Codeup 同步失败：${projectsCache.cloud_error}`;
+        note.textContent += ` ${providerName} 同步失败：${projectsCache.cloud_error}`;
       }
     }
 
@@ -909,20 +915,24 @@
     function currentOrgProjects() {
       const projects = projectsCache?.projects || [];
       const org = (projectsCache?.organizations || []).find(item => item.id === selectedGitOrg) || {};
-      const allowedSpaces = new Set([selectedGitOrg, org.name, org.namespace_id].filter(Boolean));
+      const allowedSpaces = new Set([selectedGitOrg, org.name, org.namespace_id, org.owner].filter(Boolean));
       return projects.filter(project => {
         if (!project.cloned) {
-          const space = codeupSpace(project.web_url || project.remote_url || "");
+          const space = remoteSpace(project.web_url || project.remote_url || "");
           return project.org_id === selectedGitOrg || (project.namespace_id && org.namespace_id && project.namespace_id === org.namespace_id) || (space && allowedSpaces.has(space));
         }
-        const space = codeupSpace(project.remote_url || "");
-        return !space || allowedSpaces.has(space);
+        const space = remoteSpace(project.remote_url || "");
+        return project.org_id === selectedGitOrg || (space && allowedSpaces.has(space));
       });
     }
 
-    function codeupSpace(url) {
-      const match = String(url || "").match(/codeup\.aliyun\.com\/([^/]+)/);
-      return match ? match[1] : "";
+    function remoteSpace(url) {
+      const text = String(url || "");
+      const codeup = text.match(/codeup\.aliyun\.com\/([^/]+)/);
+      if (codeup) return codeup[1];
+      const github = text.match(/github\.com[:/]([^/]+)\/[^/]+/);
+      if (github) return github[1];
+      return "";
     }
 
     async function loadCloudProjects(options = {}) {
@@ -965,7 +975,7 @@
         projectsCache.cloud_error = payload.cloud_error || "";
       } catch (error) {
         if (loadingOrg !== selectedGitOrg) return;
-        projectsCache.cloud_error = error.name === "AbortError" ? "Codeup 同步超时，已保留本机项目可用。" : error.message;
+        projectsCache.cloud_error = error.name === "AbortError" ? "远程平台同步超时，已保留本机项目可用。" : error.message;
       } finally {
         if (cloudLoaded) {
           cloudLoadedOrgs.add(loadingOrg);
@@ -989,15 +999,17 @@
     function mergeCloudProjects(cloudProjects, orgId = selectedGitOrg) {
       const org = (projectsCache?.organizations || []).find(item => item.id === orgId) || {};
       const allowedSpaces = new Set([orgId, org.name, org.namespace_id].filter(Boolean));
-      const baseProjects = (projectsCache.local_projects || []).filter(project => allowedSpaces.has(codeupSpace(project.remote_url || "")));
+      const baseProjects = (projectsCache.local_projects || []).filter(project => project.org_id === orgId || allowedSpaces.has(remoteSpace(project.remote_url || "")));
       const byName = new Map(baseProjects.map(project => [project.name, {...project}]));
       for (const project of cloudProjects) {
         const existing = byName.get(project.name);
         if (existing) {
-          existing.source = "本机 + Codeup";
+          existing.source = `本机 + ${project.provider_label || "远程"}`;
           existing.display_name = project.display_name || existing.display_name;
           existing.web_url = project.web_url || "";
           existing.default_branch = project.default_branch || "";
+          existing.provider = project.provider || existing.provider;
+          existing.provider_label = project.provider_label || existing.provider_label;
           continue;
         }
         byName.set(project.name, {
@@ -1007,7 +1019,9 @@
           current_branch: project.default_branch || "",
           selected: false,
           cloned: false,
-          source: "Codeup"
+          source: project.provider_label || "远程",
+          provider: project.provider || "",
+          provider_label: project.provider_label || "远程"
         });
       }
       projectsCache.projects = [...byName.values()].sort((a, b) => Number(!a.cloned) - Number(!b.cloned) || a.name.localeCompare(b.name));
@@ -1028,11 +1042,11 @@
         return;
       }
       if (source === "cloud" && !projectsCache?.cloud_enabled) {
-        clearGitRefs(`${selectedProject?.display_name || selectedGitProject} 尚未克隆到本机，且未配置 Codeup token，无法直接读取。`);
+        clearGitRefs(`${selectedProject?.display_name || selectedGitProject} 尚未克隆到本机，且未配置远程平台 token，无法直接读取。`);
         return;
       }
       $("gitStatus").textContent = source === "cloud"
-        ? `正在从 Codeup 读取 ${requestedProject} 的分支、Tag 和最近提交...`
+        ? `正在从 ${selectedProject?.provider_label || "远程平台"} 读取 ${requestedProject} 的分支、Tag 和最近提交...`
         : `正在读取 ${requestedProject} 的 Git 分支、Tag 和最近提交...`;
       $("gitRefs").innerHTML = "";
       const params = new URLSearchParams({project: requestedProject, org: requestedOrg, source});
@@ -1049,7 +1063,7 @@
     }
 
     function gitStatusText(payload) {
-      const sourceLabel = payload.source === "cloud" ? "Codeup" : "本机";
+      const sourceLabel = payload.source === "cloud" ? (payload.provider_label || "远程") : "本机";
       return `项目：${payload.project}，来源：${sourceLabel}，当前分支：${payload.current_branch || "未知"}`;
     }
 
@@ -1105,12 +1119,13 @@
       if (!ref) return;
       const selectedProject = currentProject();
       const source = selectedProject?.cloned ? "local" : "cloud";
-      const sourceLabel = source === "cloud" ? "Codeup" : "Git";
+      const sourceLabel = source === "cloud" ? (selectedProject?.provider_label || "远程") : "Git";
       if (gitPickTarget === "old") {
         oldGitRef = ref;
         oldGitProject = selectedGitProject;
         oldGitOrg = selectedGitOrg;
         oldGitSource = source;
+        oldGitProviderLabel = selectedProject?.provider_label || "";
         oldFiles = [];
         $("oldInput").value = "";
         $("oldPath").textContent = `${sourceLabel}：${oldGitProject} / ${shortRef(ref)}`;
@@ -1120,6 +1135,7 @@
         newGitProject = selectedGitProject;
         newGitOrg = selectedGitOrg;
         newGitSource = source;
+        newGitProviderLabel = selectedProject?.provider_label || "";
         newFiles = [];
         $("newInput").value = "";
         $("newPath").textContent = `${sourceLabel}：${newGitProject} / ${shortRef(ref)}`;

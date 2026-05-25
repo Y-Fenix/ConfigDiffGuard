@@ -62,7 +62,7 @@ def write_reports(result: CompareResult, output_dir: str) -> None:
 def render_markdown(result: CompareResult) -> str:
     stats = result.stats
     lines = [
-        "# ConfigDiffGuard 配置对比报告",
+        "# 【火犀牛工作室】配置对比报告",
         "",
         f"- Old: `{result.old_label}`",
         f"- New: `{result.new_label}`",
@@ -130,7 +130,8 @@ def render_html(result: CompareResult) -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ConfigDiffGuard 配置对比</title>
+  <title>【火犀牛工作室】配置对比</title>
+  <link rel="icon" href="./柴柴.ico" type="image/x-icon" />
   <style>
     :root {{ color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
     body {{ margin: 0; background: #f6f7f9; color: #1f2933; }}
@@ -170,7 +171,7 @@ def render_html(result: CompareResult) -> str:
 </head>
 <body>
   <header>
-    <h1>ConfigDiffGuard 配置对比</h1>
+    <h1>【火犀牛工作室】配置对比</h1>
     <div id="subtitle"></div>
   </header>
   <main>

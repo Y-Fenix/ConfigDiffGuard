@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "description": "远程代码平台账号配置模板。复制为 provider_accounts.json 后填写自己的平台、组织、token 或 token_env。",
+  "default_workspace": "github-demo",
+  "workspaces": [
+    {
+      "id": "github-demo",
+      "name": "GitHub 示例组织",
+      "provider": "github",
+      "provider_label": "GitHub",
+      "owner": "your-github-org-or-user",
+      "owner_type": "org",
+      "token_env": "GITHUB_TOKEN",
+      "api_base": "https://api.github.com",
+      "list_mode": "owner",
+      "note": "owner_type 可填 org 或 user。若希望用 token 列出当前账号可访问的全部仓库，可把 list_mode 改成 viewer。"
+    },
+    {
+      "id": "codeup-demo",
+      "name": "Codeup 示例组织",
+      "provider": "codeup",
+      "provider_label": "Codeup",
+      "organization_id": "your-codeup-organization-id",
+      "namespace_id": "your-codeup-namespace-id",
+      "token_env": "YUNXIAO_TOKEN",
+      "api_base": "openapi-rdc.aliyuncs.com",
+      "note": "阿里云云效 Codeup 使用 organization_id；如果只想展示某个代码组，填写 namespace_id。"
+    },
+    {
+      "id": "github-fixed-repos",
+      "name": "GitHub 固定项目清单",
+      "provider": "github",
+      "provider_label": "GitHub",
+      "owner": "your-github-org-or-user",
+      "token_env": "GITHUB_TOKEN",
+      "repositories": [
+        {
+          "name": "ConfigRepo",
+          "owner": "your-github-org-or-user",
+          "repo": "ConfigRepo",
+          "default_branch": "main"
+        }
+      ],
+      "note": "如果商业版客户不想让工具遍历全部仓库，可以只配置 repositories 固定清单。"
+    },
+    {
+      "id": "gitlab-demo",
+      "name": "GitLab 示例组",
+      "provider": "gitlab",
+      "provider_label": "GitLab",
+      "group": "your-gitlab-group-or-subgroup",
+      "token_env": "GITLAB_TOKEN",
+      "api_base": "https://gitlab.com/api/v4",
+      "web_base": "https://gitlab.com",
+      "note": "group 支持子组路径，例如 studio/configs。不填 group 时会列出 token membership 可见项目。私有部署时替换 api_base 和 web_base。"
+    },
+    {
+      "id": "gitee-demo",
+      "name": "Gitee 示例组织",
+      "provider": "gitee",
+      "provider_label": "Gitee",
+      "owner": "your-gitee-org-or-user",
+      "owner_type": "org",
+      "token_env": "GITEE_TOKEN",
+      "api_base": "https://gitee.com/api/v5",
+      "list_mode": "owner",
+      "note": "owner_type 可填 org 或 user。若希望用 token 列出当前账号可访问仓库，可把 list_mode 改成 viewer。"
+    },
+    {
+      "id": "bitbucket-demo",
+      "name": "Bitbucket 示例 Workspace",
+      "provider": "bitbucket",
+      "provider_label": "Bitbucket",
+      "workspace": "your-bitbucket-workspace",
+      "username_env": "BITBUCKET_USERNAME",
+      "token_env": "BITBUCKET_APP_PASSWORD",
+      "api_base": "https://api.bitbucket.org/2.0",
+      "note": "Bitbucket Cloud 推荐 username + app password；也可只填 token 使用 Bearer。"
+    }
+  ]
+}
